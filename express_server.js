@@ -10,6 +10,7 @@ const urlDatabase = {
 function generateRandomString() {
   return Math.random().toString(36).slice(2, 8);
 }
+let random = generateRandomString();
 
 app.set("view engine", "ejs");
 
@@ -19,9 +20,16 @@ app.get('/urls/new', (req, res) => {
   res.render('urls_new');
 });
 
+app.get("/u/:id", (req, res) => {
+  // const longURL = ...
+  res.redirect(longURL);
+});
+
 app.post("/urls", (req, res) => {
-  console.log(req.body); // Log the POST request body to the console
-  res.send("Ok"); // Respond with 'Ok' (we will replace this)
+  // console.log(req.body); // Log the POST request body to the console
+  urlDatabase[random] = req.body.longURL;
+  const templateVars = { id: random, longURL: req.body.longURL };
+  res.render('urls_show', templateVars); // Respond with 'Ok' (we will replace this)
 });
 
 app.get('/urls/:id', (req, res) => {
