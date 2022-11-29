@@ -21,13 +21,11 @@ app.get('/urls/new', (req, res) => {
 });
 
 app.get("/u/:id", (req, res) => {
-  console.log(req.params);
   const longURL = urlDatabase[req.params.id];
   res.redirect(longURL);
 });
 
 app.post("/urls", (req, res) => {
-  // console.log(req.body); // Log the POST request body to the console
   urlDatabase[random] = req.body.longURL;
   const templateVars = { id: random, longURL: req.body.longURL };
   res.render('urls_show', templateVars); // Respond with 'Ok' (we will replace this)
