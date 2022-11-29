@@ -10,46 +10,56 @@ const urlDatabase = {
 function generateRandomString() {
   return Math.random().toString(36).slice(2, 8);
 }
-let random = generateRandomString();
 
 app.set("view engine", "ejs");
 
 app.use(express.urlencoded({ extended: true }));
 
-// add new url
+// ADD
 app.get('/urls/new', (req, res) => {
   res.render('urls_new');
 });
 
-// delete url
+// ADD - create new url
+app.post("/urls", (req, res) => {
+  let random = generateRandomString();
+  urlDatabase[random] = req.body.longURL;
+  res.redirect("/urls");
+});
+
+// READ - show specific id
+app.get('/urls/:id', (req, res) => {
+  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id]};
+  res.render('urls_show', templateVars);
+});
+
+// EDIT
+// edit button on urls page
+app.post("/urls/:id/", (req, res) => {
+  const id = req.params.id;
+  const longUrl = req.body.longUrl;
+  urlDatabase[id] = longUrl;
+  res.redirect("/urls");
+});
+
+// DELETE
+// delete button on urls page
 app.post("/urls/:id/delete", (req, res) => {
   const id = req.params.id;
   delete urlDatabase[id];
   res.redirect("/urls");
 });
 
-// redirect from short url
+// redirect to longURL from short url
 app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id];
   res.redirect(longURL);
 });
 
 // shows all urls
-app.post("/urls", (req, res) => {
-  urlDatabase[random] = req.body.longURL;
-  const templateVars = { id: random, longURL: req.body.longURL };
-  res.render('urls_show', templateVars);
-});
-
 app.get('/urls', (req, res) => {
   const templateVars = {urls: urlDatabase};
   res.render('urls_index', templateVars);
-});
-
-// show specific url
-app.get('/urls/:id', (req, res) => {
-  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id]};
-  res.render('urls_show', templateVars);
 });
 
 // homepage
