@@ -56,6 +56,12 @@ app.post("/login", (req, res) => {
   res.redirect('/urls');
 });
 
+// logout button
+app.post("/logout", (req, res) => {
+  res.clearCookie('username');
+  res.redirect('/urls');
+});
+
 // DELETE
 // delete button on urls page
 app.post("/urls/:id/delete", (req, res) => {
