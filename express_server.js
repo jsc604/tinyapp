@@ -8,9 +8,11 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com",
 };
 
+const users = {};
+
 function generateRandomString() {
   return Math.random().toString(36).slice(2, 8);
-}
+};
 
 app.set("view engine", "ejs");
 
@@ -48,6 +50,19 @@ app.get('/urls/:id', (req, res) => {
 });
 
 // EDIT
+// handle registration form data
+app.post('/register', (req, res) => {
+  const email = req.body.email;
+  const password = req.body.password;
+  let randomId = generateRandomString();
+  users[randomId] = {
+    id: randomId,
+    email: email,
+    password: password
+  };
+  res.cookie('user_id', randomId);
+  res.redirect('/urls');
+});
 // edit button on urls page
 app.post("/urls/:id/", (req, res) => {
   const id = req.params.id;
