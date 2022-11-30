@@ -21,7 +21,11 @@ app.use(cookieParser());
 
 // ADD
 app.get('/urls/new', (req, res) => {
-  const templateVars = { username: req.cookies['username'] };
+  let username = null;
+  if (req.cookies['user_id']) {
+    username = req.cookies['user_id'].email;
+  }
+  const templateVars = { username: username };
   res.render('urls_new', templateVars);
 });
 
@@ -35,14 +39,22 @@ app.post("/urls", (req, res) => {
 // READ - show specific id
 // get user registration form
 app.get('/register', (req, res) => {
-  const templateVars = { username: req.cookies['username'] };
+  let username = null;
+  if (req.cookies['user_id']) {
+    username = req.cookies['user_id'].email;
+  }
+  const templateVars = { username: username };
   res.render('urls_register', templateVars);
 })
 ;
 // get page by id
 app.get('/urls/:id', (req, res) => {
+  let username = null;
+  if (req.cookies['user_id']) {
+    username = req.cookies['user_id'].email;
+  }
   const templateVars = {
-    username: req.cookies['username'],
+    username: username,
     id: req.params.id,
     longURL: urlDatabase[req.params.id]
   };
@@ -60,7 +72,8 @@ app.post('/register', (req, res) => {
     email: email,
     password: password
   };
-  res.cookie('user_id', randomId);
+  res.cookie('user_id', users[randomId]);
+  console.log(users);
   res.redirect('/urls');
 });
 // edit button on urls page
@@ -74,13 +87,13 @@ app.post("/urls/:id/", (req, res) => {
 // login button
 app.post("/login", (req, res) => {
   let login = req.body.username;
-  res.cookie('username', login);
+  res.cookie('user_id', login);
   res.redirect('/urls');
 });
 
 // logout button
 app.post("/logout", (req, res) => {
-  res.clearCookie('username');
+  res.clearCookie('user_id');
   res.redirect('/urls');
 });
 
@@ -100,10 +113,16 @@ app.get("/u/:id", (req, res) => {
 
 // shows all urls
 app.get('/urls', (req, res) => {
+  let username = null;
+  if (req.cookies['user_id']) {
+    username = req.cookies['user_id'].email;
+  }
   const templateVars = {
-    username: req.cookies['username'],
+    username: username,
     urls: urlDatabase
   };
+  // console.log(templateVars);
+  console.log(req.cookies['user_id']);
   res.render('urls_index', templateVars);
 });
 
