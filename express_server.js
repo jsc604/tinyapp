@@ -31,6 +31,13 @@ app.post("/urls", (req, res) => {
 });
 
 // READ - show specific id
+// get user registration form
+app.get('/register', (req, res) => {
+  const templateVars = { username: req.cookies['username'] };
+  res.render('urls_register', templateVars);
+})
+;
+// get page by id
 app.get('/urls/:id', (req, res) => {
   const templateVars = {
     username: req.cookies['username'],
