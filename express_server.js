@@ -104,6 +104,7 @@ app.get('/urls/:id', (req, res) => {
     const id = req.params.id;
     let username = req.cookies['user_id'].email;
     let objId = Object.keys(urlDatabase)[id];
+    console.log(Object.keys(urlDatabase)[id]);
     let objUrl = Object.values(urlDatabase)[id].longURL;
     const templateVars = {
       username: username,
@@ -117,7 +118,6 @@ app.get('/urls/:id', (req, res) => {
 });
 
 // EDIT
-
 
 // handle login form data
 app.post('/login', (req, res) => {
@@ -151,11 +151,11 @@ app.post('/register', (req, res) => {
   }
 });
 
-// edit button on urls page
+// submit button on urls_show page
 app.post("/urls/:id/", (req, res) => {
   const id = req.params.id;
   const longUrl = req.body.longUrl;
-  urlDatabase[id] = longUrl;
+  urlDatabase[id].longURL = longUrl;
   res.redirect("/urls");
 });
 
