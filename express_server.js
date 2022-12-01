@@ -100,13 +100,15 @@ app.get('/register', (req, res) => {
 
 // get page by id
 app.get('/urls/:id', (req, res) => {
-  let username = null;
   if (req.cookies['user_id']) {
-    username = req.cookies['user_id'].email;
+    const id = req.params.id;
+    let username = req.cookies['user_id'].email;
+    let objId = Object.keys(urlDatabase)[id];
+    let objUrl = Object.values(urlDatabase)[id].longURL;
     const templateVars = {
       username: username,
-      id: req.params.id,
-      longURL: urlDatabase[req.params.id].longURL
+      id: objId,
+      longURL: objUrl
     };
     res.render('urls_show', templateVars);
   } else {
@@ -167,13 +169,13 @@ app.post("/logout", (req, res) => {
 // delete button on urls page
 app.post("/urls/:id/delete", (req, res) => {
   const id = req.params.id;
-  delete urlDatabase[id];
+  let objId = Object.keys(urlDatabase)[id];
+  delete urlDatabase[objId];
   res.redirect("/urls");
 });
 
 // redirect to longURL from short url
 app.get("/u/:id", (req, res) => {
-  console.log(req.params.id);
   const longURL = urlDatabase[req.params.id].longURL;
   for (let id in urlDatabase) {
     if (id === req.params.id) {
@@ -191,7 +193,6 @@ app.get('/urls', (req, res) => {
     username = req.cookies['user_id'].email;
     let userId = req.cookies['user_id'].id;
     let personalUrls = urlsForUser(userId);
-    console.log(personalUrls);
     let templateVars = {
       username: username,
       urls: personalUrls
