@@ -50,9 +50,11 @@ app.get('/urls/new', (req, res) => {
   let username = null;
   if (req.cookies['user_id']) {
     username = req.cookies['user_id'].email;
+    let templateVars = { username: username };
+    res.render('urls_new', templateVars);
+  } else {
+    res.redirect('/login');
   }
-  const templateVars = { username: username };
-  res.render('urls_new', templateVars);
 });
 
 // ADD - create new url
@@ -68,7 +70,6 @@ app.get('/login', (req, res) => {
   let username = null;
   let templateVars = { username: username };
   if (req.cookies['user_id']) {
-    username = req.cookies['user_id'].email;
     res.redirect('/urls');
   } else {
     res.render('urls_login', templateVars);
@@ -80,7 +81,6 @@ app.get('/register', (req, res) => {
   let username = null;
   let templateVars = { username: username };
   if (req.cookies['user_id']) {
-    username = req.cookies['user_id'].email;
     res.redirect('/urls');
   } else {
     res.render('urls_register', templateVars);
@@ -150,7 +150,7 @@ app.post("/logout", (req, res) => {
   }
   const templateVars = { username: username };
   res.clearCookie('user_id');
-  res.render('urls_login', templateVars);
+  res.redirect('/login');
 });
 
 // DELETE
