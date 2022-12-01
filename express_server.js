@@ -3,9 +3,22 @@ const app = express();
 const PORT = 8089; // default port 8080
 const cookieParser = require('cookie-parser');
 
-const urlDatabase = {};
+const urlDatabase = {
+  sdfsd:
+  {
+    id: 'sdfsd',
+    longURL: 'google.ca',
+    userID: 'asdfds'
+  }
+};
 
-const users = {};
+const users = { asdfds:
+  {
+    id: 'asdfds',
+    email: 'email@email.com',
+    password: 'password'
+  }
+};
 
 function generateRandomString() {
   return Math.random().toString(36).slice(2, 8);
@@ -151,9 +164,15 @@ app.post('/register', (req, res) => {
 // submit button on urls_show page
 app.post("/urls/:id/", (req, res) => {
   const id = req.params.id;
-  const longUrl = req.body.longUrl;
-  urlDatabase[id].longURL = longUrl;
-  res.redirect("/urls");
+  const url = urlDatabase[id];
+  let user = req.cookies['user_id'].id;
+  if (url && url.userID === user) {
+    const longUrl = req.body.longUrl;
+    urlDatabase[id].longURL = longUrl;
+    res.redirect("/urls");
+  } else {
+    res.status(404).send('404 ID not found.');
+  }
 });
 
 // logout button
