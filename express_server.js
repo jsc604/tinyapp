@@ -78,11 +78,13 @@ app.get('/login', (req, res) => {
 // get user registration form
 app.get('/register', (req, res) => {
   let username = null;
+  let templateVars = { username: username };
   if (req.cookies['user_id']) {
     username = req.cookies['user_id'].email;
+    res.redirect('/urls');
+  } else {
+    res.render('urls_register', templateVars);
   }
-  const templateVars = { username: username };
-  res.render('urls_register', templateVars);
 });
 
 // get page by id
