@@ -41,7 +41,7 @@ const urlsForUser = (id) => {
   let urlList = [];
   for (let key in urlDatabase) {
     if (urlDatabase[key].userID === id) {
-      urlList.push(urlDatabase[key].longURL);
+      urlList.push({[key]: urlDatabase[key]});
     }
   }
   return urlList;
@@ -189,9 +189,12 @@ app.get('/urls', (req, res) => {
   let username = null;
   if (req.cookies['user_id']) {
     username = req.cookies['user_id'].email;
+    let userId = req.cookies['user_id'].id;
+    let personalUrls = urlsForUser(userId);
+    console.log(personalUrls);
     let templateVars = {
       username: username,
-      urls: urlDatabase
+      urls: personalUrls
     };
     res.render('urls_index', templateVars);
   } else {
