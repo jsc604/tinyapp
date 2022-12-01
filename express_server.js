@@ -4,18 +4,18 @@ const PORT = 8089; // default port 8080
 const cookieParser = require('cookie-parser');
 
 const urlDatabase = {
-  sdfsd:
+  testShort:
   {
-    id: 'sdfsd',
+    id: 'testShort',
     longURL: 'google.ca',
-    userID: 'asdfds'
+    userID: 'testUser'
   }
 };
 
 const users = { asdfds:
   {
-    id: 'asdfds',
-    email: 'email@email.com',
+    id: 'testUser',
+    email: 'testEmail@email.com',
     password: 'password'
   }
 };
@@ -185,8 +185,14 @@ app.post("/logout", (req, res) => {
 // delete button on urls page
 app.post("/urls/:id/delete", (req, res) => {
   const id = req.params.id;
-  delete urlDatabase[id];
-  res.redirect("/urls");
+  const url = urlDatabase[id];
+  let user = req.cookies['user_id'].id;
+  if (url && url.userID === user) {
+    delete urlDatabase[id];
+    res.redirect("/urls");
+  } else {
+    res.status(404).send('404 ID not found.');
+  }
 });
 
 // redirect to longURL from short url
