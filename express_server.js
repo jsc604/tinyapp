@@ -37,6 +37,16 @@ const returnId = (object, testEmail, testPassword) => {
   }
 };
 
+const urlsForUser = (id) => {
+  let urlList = [];
+  for (let key in urlDatabase) {
+    if (urlDatabase[key].userID === id) {
+      urlList.push(urlDatabase[key].longURL);
+    }
+  }
+  return urlList;
+};
+
 app.set("view engine", "ejs");
 
 app.use(express.urlencoded({ extended: true }));
@@ -93,14 +103,15 @@ app.get('/urls/:id', (req, res) => {
   let username = null;
   if (req.cookies['user_id']) {
     username = req.cookies['user_id'].email;
+    const templateVars = {
+      username: username,
+      id: req.params.id,
+      longURL: urlDatabase[req.params.id].longURL
+    };
+    res.render('urls_show', templateVars);
+  } else {
+    res.status(401).send('401 Unauthorized Access. Please Log in.');
   }
-  // console.log(urlDatabase[req.params.id].longURL);
-  const templateVars = {
-    username: username,
-    id: req.params.id,
-    longURL: urlDatabase[req.params.id].longURL
-  };
-  res.render('urls_show', templateVars);
 });
 
 // EDIT
