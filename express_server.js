@@ -4,8 +4,14 @@ const PORT = 8089; // default port 8080
 const cookieParser = require('cookie-parser');
 
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com",
+  "9sm5xK": {
+    longURL: "http://www.google.com",
+    userID: "9sm5xK",
+  },
+  "b2xVn2": {
+    longURL: "http://www.lighthouselabs.ca",
+    userID: "b2xVn2",
+  },
 };
 
 const users = {};
@@ -58,10 +64,14 @@ app.get('/urls/new', (req, res) => {
 });
 
 // ADD - create new url
-app.post("/urls", (req, res) => {
-  let random = generateRandomString();
-  urlDatabase[random] = req.body.longURL;
-  res.redirect("/urls");
+app.post("/urls/new", (req, res) => {
+  if (req.cookies['user_id']) {
+    let random = generateRandomString();
+    urlDatabase[random] = { longURL: req.body.longURL, userID: req.cookies['user_id'].id };
+    res.redirect("/urls");
+  } else {
+    res.status(401).send('401 User Authentication Required');
+  }
 });
 
 // READ
@@ -93,15 +103,18 @@ app.get('/urls/:id', (req, res) => {
   if (req.cookies['user_id']) {
     username = req.cookies['user_id'].email;
   }
+  // console.log(urlDatabase[req.params.id].longURL);
   const templateVars = {
     username: username,
     id: req.params.id,
-    longURL: urlDatabase[req.params.id]
+    longURL: urlDatabase[req.params.id].longURL
   };
   res.render('urls_show', templateVars);
 });
 
 // EDIT
+
+
 // handle login form data
 app.post('/login', (req, res) => {
   const email = req.body.email;
@@ -144,11 +157,6 @@ app.post("/urls/:id/", (req, res) => {
 
 // logout button
 app.post("/logout", (req, res) => {
-  let username = null;
-  if (req.cookies['user_id']) {
-    username = req.cookies['user_id'].email;
-  }
-  const templateVars = { username: username };
   res.clearCookie('user_id');
   res.redirect('/login');
 });
@@ -163,8 +171,14 @@ app.post("/urls/:id/delete", (req, res) => {
 
 // redirect to longURL from short url
 app.get("/u/:id", (req, res) => {
-  const longURL = urlDatabase[req.params.id];
-  res.redirect(longURL);
+  console.log(req.params.id);
+  const longURL = urlDatabase[req.params.id].longURL;
+  for (let id in urlDatabase) {
+    if (id === req.params.id) {
+      res.redirect(longURL);
+    }
+  }
+  res.status(404).send('404 Not Found');
 });
 
 // shows all urls
