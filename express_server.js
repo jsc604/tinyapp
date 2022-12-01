@@ -46,6 +46,16 @@ app.post("/urls", (req, res) => {
 });
 
 // READ - show specific id
+// get login form
+app.get('/login', (req, res) => {
+  let username = null;
+  if (req.cookies['user_id']) {
+    username = req.cookies['user_id'].email;
+  }
+  const templateVars = { username: username };
+  res.render('urls_login', templateVars);
+});
+
 // get user registration form
 app.get('/register', (req, res) => {
   let username = null;
@@ -54,8 +64,8 @@ app.get('/register', (req, res) => {
   }
   const templateVars = { username: username };
   res.render('urls_register', templateVars);
-})
-;
+});
+
 // get page by id
 app.get('/urls/:id', (req, res) => {
   let username = null;
