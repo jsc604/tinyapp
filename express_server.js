@@ -14,6 +14,15 @@ function generateRandomString() {
   return Math.random().toString(36).slice(2, 8);
 };
 
+const getUserByEmail = (usersEmail, newEmail, key) => {
+  for (let id in usersEmail) {
+    if (usersEmail[id][key] === newEmail) {
+      return true;
+    }
+  }
+  return false;
+};
+
 app.set("view engine", "ejs");
 
 app.use(express.urlencoded({ extended: true }));
@@ -66,16 +75,20 @@ app.get('/urls/:id', (req, res) => {
 app.post('/register', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
-  let randomId = generateRandomString();
-  users[randomId] = {
-    id: randomId,
-    email: email,
-    password: password
-  };
-  res.cookie('user_id', users[randomId]);
-  console.log(users);
-  res.redirect('/urls');
+  if (getUserByEmail(users, email, 'email') === true || !password || !email) {
+    res.status(400).send('400 Bad Request');
+  } else {
+    let randomId = generateRandomString();
+    users[randomId] = {
+      id: randomId,
+      email: email,
+      password: password
+    };
+    res.cookie('user_id', users[randomId]);
+    res.redirect('/urls');
+  }
 });
+
 // edit button on urls page
 app.post("/urls/:id/", (req, res) => {
   const id = req.params.id;
@@ -121,8 +134,6 @@ app.get('/urls', (req, res) => {
     username: username,
     urls: urlDatabase
   };
-  // console.log(templateVars);
-  console.log(req.cookies['user_id']);
   res.render('urls_index', templateVars);
 });
 
