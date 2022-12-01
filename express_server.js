@@ -3,16 +3,7 @@ const app = express();
 const PORT = 8089; // default port 8080
 const cookieParser = require('cookie-parser');
 
-const urlDatabase = {
-  "9sm5xK": {
-    longURL: "http://www.google.com",
-    userID: "9sm5xK",
-  },
-  "b2xVn2": {
-    longURL: "http://www.lighthouselabs.ca",
-    userID: "b2xVn2",
-  },
-};
+const urlDatabase = {};
 
 const users = {};
 
@@ -183,15 +174,18 @@ app.get("/u/:id", (req, res) => {
 
 // shows all urls
 app.get('/urls', (req, res) => {
+  // req.cookies['user_id'] ==={ id: 'zguo1d', email: 'jeffreycheung_@live.com', password: '123321' }
   let username = null;
   if (req.cookies['user_id']) {
     username = req.cookies['user_id'].email;
+    let templateVars = {
+      username: username,
+      urls: urlDatabase
+    };
+    res.render('urls_index', templateVars);
+  } else {
+    res.status(401).send('401 Unauthorized Access. Please Login.');
   }
-  const templateVars = {
-    username: username,
-    urls: urlDatabase
-  };
-  res.render('urls_index', templateVars);
 });
 
 // homepage
