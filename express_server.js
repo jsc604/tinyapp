@@ -14,13 +14,30 @@ function generateRandomString() {
   return Math.random().toString(36).slice(2, 8);
 };
 
-const getUserByEmail = (usersEmail, newEmail, key) => {
+const getUserByKey = (usersEmail, newEmail, key) => {
   for (let id in usersEmail) {
     if (usersEmail[id][key] === newEmail) {
       return true;
     }
   }
   return false;
+};
+
+const matchId = (object, testEmail, testPassword) => {
+  for (let id in object) {
+    if (object[id].email === testEmail && object[id].password === testPassword) {
+      return true;
+    }
+  }
+  return false;
+};
+
+const returnId = (object, testEmail, testPassword) => {
+  for (let id in object) {
+    if (object[id].email === testEmail && object[id].password === testPassword) {
+      return id;
+    }
+  }
 };
 
 app.set("view engine", "ejs");
@@ -81,11 +98,25 @@ app.get('/urls/:id', (req, res) => {
 });
 
 // EDIT
+// handle login form data
+app.post('/login', (req, res) => {
+  const email = req.body.email;
+  const password = req.body.password;
+  const match = matchId(users, email, password);
+  const id = returnId(users, email, password);
+  if (match) {
+    res.cookie('user_id', users[id]);
+    res.redirect('/urls');
+  } else {
+    res.status(403).send('403 Forbidden');
+  }
+});
+
 // handle registration form data
 app.post('/register', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
-  if (getUserByEmail(users, email, 'email') === true || !password || !email) {
+  if (getUserByKey(users, email, 'email') || !password || !email) {
     res.status(400).send('400 Bad Request');
   } else {
     let randomId = generateRandomString();
@@ -107,17 +138,15 @@ app.post("/urls/:id/", (req, res) => {
   res.redirect("/urls");
 });
 
-// login button
-app.post("/login", (req, res) => {
-  let login = req.body.username;
-  res.cookie('user_id', login);
-  res.redirect('/urls');
-});
-
 // logout button
 app.post("/logout", (req, res) => {
+  let username = null;
+  if (req.cookies['user_id']) {
+    username = req.cookies['user_id'].email;
+  }
+  const templateVars = { username: username };
   res.clearCookie('user_id');
-  res.redirect('/urls');
+  res.render('urls_login', templateVars);
 });
 
 // DELETE
