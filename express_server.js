@@ -62,15 +62,17 @@ app.post("/urls", (req, res) => {
   res.redirect("/urls");
 });
 
-// READ - show specific id
+// READ
 // get login form
 app.get('/login', (req, res) => {
   let username = null;
+  let templateVars = { username: username };
   if (req.cookies['user_id']) {
     username = req.cookies['user_id'].email;
+    res.redirect('/urls');
+  } else {
+    res.render('urls_login', templateVars);
   }
-  const templateVars = { username: username };
-  res.render('urls_login', templateVars);
 });
 
 // get user registration form
