@@ -38,10 +38,10 @@ const returnId = (object, testEmail, testPassword) => {
 };
 
 const urlsForUser = (id) => {
-  let urlList = [];
+  let urlList = {};
   for (let key in urlDatabase) {
     if (urlDatabase[key].userID === id) {
-      urlList.push({[key]: urlDatabase[key]});
+      urlList[key] = urlDatabase[key];
     }
   }
   return urlList;
@@ -103,13 +103,10 @@ app.get('/urls/:id', (req, res) => {
   if (req.cookies['user_id']) {
     const id = req.params.id;
     let username = req.cookies['user_id'].email;
-    let objId = Object.keys(urlDatabase)[id];
-    console.log(Object.keys(urlDatabase)[id]);
-    let objUrl = Object.values(urlDatabase)[id].longURL;
     const templateVars = {
       username: username,
-      id: objId,
-      longURL: objUrl
+      id: id,
+      longURL: urlDatabase[id].longURL
     };
     res.render('urls_show', templateVars);
   } else {
@@ -169,8 +166,7 @@ app.post("/logout", (req, res) => {
 // delete button on urls page
 app.post("/urls/:id/delete", (req, res) => {
   const id = req.params.id;
-  let objId = Object.keys(urlDatabase)[id];
-  delete urlDatabase[objId];
+  delete urlDatabase[id];
   res.redirect("/urls");
 });
 
@@ -179,7 +175,7 @@ app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id].longURL;
   for (let id in urlDatabase) {
     if (id === req.params.id) {
-      res.redirect(longURL);
+      return res.redirect(longURL);
     }
   }
   res.status(404).send('404 Not Found');
