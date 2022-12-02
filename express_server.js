@@ -4,22 +4,11 @@ const PORT = 8089; // default port 8080
 const cookieSession = require('cookie-session');
 const bcrypt = require('bcryptjs');
 const { getUserByEmail } = require('./helpers');
+const { returnId } = require('./helpers');
+const { generateRandomString } = require('./helpers');
 
 const urlDatabase = {};
-
 const users = {};
-
-const generateRandomString = () => {
-  return Math.random().toString(36).slice(2, 8);
-};
-
-const returnId = (object, testEmail) => {
-  for (let id in object) {
-    if (object[id].email === testEmail) {
-      return id;
-    }
-  }
-};
 
 const urlsForUser = (id) => {
   let urlList = {};
@@ -39,7 +28,8 @@ app.use(cookieSession({
   keys: ['key1', 'key2']
 }));
 
-// ADD
+// ------  /urls/new  -------
+//  GET
 app.get('/urls/new', (req, res) => {
   let username = null;
   if (!req.session.user_id) {
@@ -51,7 +41,7 @@ app.get('/urls/new', (req, res) => {
   res.render('urls_new', templateVars);
 });
 
-// ADD - create new url
+//  POST
 app.post("/urls/new", (req, res) => {
   if (!req.session.user_id) {
     res.status(401).send('401 User Authentication Required');
@@ -62,8 +52,87 @@ app.post("/urls/new", (req, res) => {
   res.redirect("/urls");
 });
 
-// READ
-// get login form
+// -----  /urls -----
+app.get('/urls', (req, res) => {
+  let username = null;
+  if (!req.session.user_id) {
+    return res.status(401).send('401 Unauthorized Access. Please Login.');
+  }
+  
+  username = req.session.user_id.email;
+  let userId = req.session.user_id.id;
+  let personalUrls = urlsForUser(userId);
+  let templateVars = {
+    username: username,
+    urls: personalUrls
+  };
+  res.render('urls_index', templateVars);
+});
+
+// -----  /urls/:id -----
+//  GET
+app.get('/urls/:id', (req, res) => {
+  const id = req.params.id;
+  let username = req.session.user_id.email;
+  let user = req.session.user_id.id;
+  const url = urlDatabase[id];
+
+  if (!req.session.user_id || url.userID !== user)  {
+    res.status(401).send('401 Unauthorized Access. Please Log in.');
+  }
+
+  const templateVars = {
+    username: username,
+    id: id,
+    longURL: id.longURL
+  };
+  res.render('urls_show', templateVars);
+});
+
+//  POST
+app.post("/urls/:id/", (req, res) => {
+  const id = req.params.id;
+  const url = urlDatabase[id];
+  let user = req.session.user_id.id;
+  if (!url || url.userID !== user) {
+    return res.status(404).send('404 ID not found.');
+  }
+  
+  const longUrl = req.body.longUrl;
+  urlDatabase[id].longURL = longUrl;
+  res.redirect("/urls");
+});
+
+
+// -----  DELETE -----
+
+app.post("/urls/:id/delete", (req, res) => {
+  const id = req.params.id;
+  const url = urlDatabase[id];
+  let user = req.session.user_id.id;
+  if (!url || url.userID !== user) {
+    res.status(404).send('404 ID not found.');
+  }
+  
+  delete urlDatabase[id];
+  res.redirect("/urls");
+});
+
+// -----  /u/:id  -----
+app.get("/u/:id", (req, res) => {
+  const urlId = urlDatabase[req.params.id];
+  const longURL = urlId.longURL;
+  for (let id in urlDatabase) {
+    if (id === req.params.id) {
+      return res.redirect(longURL);
+    }
+  }
+  res.status(404).send('404 Not Found');
+});
+
+
+// -----  Login  -----
+//  GET
 app.get('/login', (req, res) => {
   let username = null;
   let templateVars = { username: username };
@@ -74,37 +143,7 @@ app.get('/login', (req, res) => {
   res.redirect('/urls');
 });
 
-// get user registration form
-app.get('/register', (req, res) => {
-  let username = null;
-  let templateVars = { username: username };
-  if (!req.session.user_id) {
-    res.render('urls_register', templateVars);
-  }
-  
-  res.redirect('/urls');
-});
-
-// get page by id
-app.get('/urls/:id', (req, res) => {
-  if (!req.session.user_id) {
-    res.status(401).send('401 Unauthorized Access. Please Log in.');
-  }
-  const id = req.params.id;
-  let user = id
-  let username = req.session.user_id.email;
-  const templateVars = {
-    username: username,
-    id: id,
-    longURL: user.longURL
-  };
-
-  res.render('urls_show', templateVars);
-});
-
-// EDIT
-
-// handle login form data
+//  POST
 app.post('/login', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
@@ -119,7 +158,19 @@ app.post('/login', (req, res) => {
   res.redirect('/urls');
 });
 
-// handle registration form data
+// -----  Register  ------
+//  GET
+app.get('/register', (req, res) => {
+  let username = null;
+  let templateVars = { username: username };
+  if (!req.session.user_id) {
+    res.render('urls_register', templateVars);
+  }
+  
+  res.redirect('/urls');
+});
+
+//  POST
 app.post('/register', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
@@ -127,7 +178,7 @@ app.post('/register', (req, res) => {
   const user = getUserByEmail(email, users);
   const userEmail = user.email;
   if (userEmail === email || !password || !email) {
-    return res.status(400).send('Invalid inputs or user already exists');
+    return res.status(400).send('400 Invalid inputs or user already exists');
   }
 
   let randomId = generateRandomString();
@@ -138,71 +189,14 @@ app.post('/register', (req, res) => {
   };
 
   req.session.user_id = users[randomId];
-  console.log(users);
   res.redirect('/urls');
 });
 
-// submit button on urls_show page
-app.post("/urls/:id/", (req, res) => {
-  const id = req.params.id;
-  const url = urlDatabase[id];
-  let user = req.session.user_id.id;
-  if (!url || url.userID !== user) {
-    return res.status(404).send('404 ID not found.');
-  }
-
-  const longUrl = req.body.longUrl;
-  urlDatabase[id].longURL = longUrl;
-  res.redirect("/urls");
-});
-
-// logout button
+// -----  Logout -----
+//  POST
 app.post("/logout", (req, res) => {
   req.session = null;
   res.redirect('/login');
-});
-
-// DELETE
-// delete button on urls page
-app.post("/urls/:id/delete", (req, res) => {
-  const id = req.params.id;
-  const url = urlDatabase[id];
-  let user = req.session.user_id.id;
-  if (!url || url.userID !== user) {
-    res.status(404).send('404 ID not found.');
-  }
-
-  delete urlDatabase[id];
-  res.redirect("/urls");
-});
-
-// redirect to longURL from short url
-app.get("/u/:id", (req, res) => {
-  const urlId = urlDatabase[req.params.id];
-  const longURL = urlId.longURL;
-  for (let id in urlDatabase) {
-    if (id === req.params.id) {
-      return res.redirect(longURL);
-    }
-  }
-  res.status(404).send('404 Not Found');
-});
-
-// shows all urls
-app.get('/urls', (req, res) => {
-  let username = null;
-  if (!req.session.user_id) {
-    return res.status(401).send('401 Unauthorized Access. Please Login.');
-  }
-
-  username = req.session.user_id.email;
-  let userId = req.session.user_id.id;
-  let personalUrls = urlsForUser(userId);
-  let templateVars = {
-    username: username,
-    urls: personalUrls
-  };
-  res.render('urls_index', templateVars);
 });
 
 // homepage

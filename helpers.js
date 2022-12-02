@@ -8,4 +8,16 @@ const getUserByEmail = (email, database) => {
   return user;
 };
 
-module.exports = { getUserByEmail };
+const returnId = (object, testEmail) => {
+  for (let id in object) {
+    if (object[id].email === testEmail) {
+      return id;
+    }
+  }
+};
+
+const generateRandomString = () => {
+  return Math.random().toString(36).slice(2, 8);
+};
+
+module.exports = { getUserByEmail, returnId, generateRandomString };
