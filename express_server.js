@@ -73,6 +73,7 @@ app.get('/urls', (req, res) => {
 //  GET
 app.get('/urls/:id', (req, res) => {
   const id = req.params.id;
+  const urlData = urlDatabase[id];
   let username = req.session.user_id.email;
   let user = req.session.user_id.id;
   const url = urlDatabase[id];
@@ -84,7 +85,7 @@ app.get('/urls/:id', (req, res) => {
   const templateVars = {
     username: username,
     id: id,
-    longURL: id.longURL
+    longURL: urlData.longURL
   };
   res.render('urls_show', templateVars);
 });
