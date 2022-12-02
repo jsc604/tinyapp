@@ -3,6 +3,7 @@ const app = express();
 const PORT = 8089; // default port 8080
 const cookieSession = require('cookie-session');
 const bcrypt = require('bcryptjs');
+const getUserByEmail = require('./helpers');
 
 const urlDatabase = {};
 
@@ -10,15 +11,6 @@ const users = {};
 
 const generateRandomString = () => {
   return Math.random().toString(36).slice(2, 8);
-};
-
-const getUserByKey = (usersEmail, newEmail, key) => {
-  for (let id in usersEmail) {
-    if (usersEmail[id][key] === newEmail) {
-      return true;
-    }
-  }
-  return false;
 };
 
 const returnId = (object, testEmail) => {
@@ -132,7 +124,7 @@ app.post('/register', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
   const hashedPassword = bcrypt.hashSync(password, 10);
-  if (getUserByKey(users, email, 'email') || !password || !email) {
+  if (getUserByEmail(users, email) || !password || !email) {
     return res.status(400).send('400 Bad Request');
   }
 
