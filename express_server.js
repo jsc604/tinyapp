@@ -33,7 +33,7 @@ app.use(cookieSession({
 app.get('/urls/new', (req, res) => {
   let username = null;
   if (!req.session.user_id) {
-    res.redirect('/login');
+    return res.redirect('/login');
   }
 
   username = req.session.user_id.email;
@@ -44,7 +44,7 @@ app.get('/urls/new', (req, res) => {
 //  POST
 app.post("/urls/new", (req, res) => {
   if (!req.session.user_id) {
-    res.status(401).send('401 User Authentication Required');
+    return res.status(401).send('401 User Authentication Required');
   }
 
   let random = generateRandomString();
@@ -79,7 +79,7 @@ app.get('/urls/:id', (req, res) => {
   const url = urlDatabase[id];
 
   if (!req.session.user_id || url.userID !== user)  {
-    res.status(401).send('401 Unauthorized Access. Please Log in.');
+    return res.status(401).send('401 Unauthorized Access. Please Log in.');
   }
 
   const templateVars = {
@@ -112,7 +112,7 @@ app.post("/urls/:id/delete", (req, res) => {
   const url = urlDatabase[id];
   let user = req.session.user_id.id;
   if (!url || url.userID !== user) {
-    res.status(404).send('404 ID not found.');
+    return res.status(404).send('404 ID not found.');
   }
   
   delete urlDatabase[id];
@@ -138,7 +138,7 @@ app.get('/login', (req, res) => {
   let username = null;
   let templateVars = { username: username };
   if (!req.session.user_id) {
-    res.render('urls_login', templateVars);
+    return res.render('urls_login', templateVars);
   }
 
   res.redirect('/urls');
@@ -165,7 +165,7 @@ app.get('/register', (req, res) => {
   let username = null;
   let templateVars = { username: username };
   if (!req.session.user_id) {
-    res.render('urls_register', templateVars);
+    return res.render('urls_register', templateVars);
   }
   
   res.redirect('/urls');
