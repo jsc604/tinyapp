@@ -1,28 +1,14 @@
 const express = require("express");
 const app = express();
 const PORT = 8089; // default port 8080
-const cookieParser = require('cookie-parser');
+const cookieSession = require('cookie-session');
 const bcrypt = require('bcryptjs');
 
-const urlDatabase = {
-  testShort:
-  {
-    id: 'testShort',
-    longURL: 'google.ca',
-    userID: 'testUser'
-  }
-};
+const urlDatabase = {};
 
-const users = {
-  asdfds:
-  {
-    id: 'testUser',
-    email: 'testEmail@email.com',
-    password: 'password'
-  }
-};
+const users = {};
 
-function generateRandomString() {
+const generateRandomString = () => {
   return Math.random().toString(36).slice(2, 8);
 };
 
@@ -56,28 +42,31 @@ const urlsForUser = (id) => {
 app.set("view engine", "ejs");
 
 app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
+app.use(cookieSession({
+  name: 'session',
+  keys: ['key1', 'key2']
+}));
 
 // ADD
 app.get('/urls/new', (req, res) => {
   let username = null;
-  if (!req.cookies['user_id']) {
+  if (!req.session.user_id) {
     res.redirect('/login');
   }
 
-  username = req.cookies['user_id'].email;
+  username = req.session.user_id.email;
   let templateVars = { username: username };
   res.render('urls_new', templateVars);
 });
 
 // ADD - create new url
 app.post("/urls/new", (req, res) => {
-  if (!req.cookies['user_id']) {
+  if (!req.session.user_id) {
     res.status(401).send('401 User Authentication Required');
   }
 
   let random = generateRandomString();
-  urlDatabase[random] = { longURL: req.body.longURL, userID: req.cookies['user_id'].id };
+  urlDatabase[random] = { longURL: req.body.longURL, userID: req.session.user_id.id };
   res.redirect("/urls");
 });
 
@@ -86,7 +75,7 @@ app.post("/urls/new", (req, res) => {
 app.get('/login', (req, res) => {
   let username = null;
   let templateVars = { username: username };
-  if (!req.cookies['user_id']) {
+  if (!req.session.user_id) {
     res.render('urls_login', templateVars);
   }
 
@@ -97,21 +86,21 @@ app.get('/login', (req, res) => {
 app.get('/register', (req, res) => {
   let username = null;
   let templateVars = { username: username };
-  if (!req.cookies['user_id']) {
+  if (!req.session.user_id) {
     res.render('urls_register', templateVars);
   }
-
+  
   res.redirect('/urls');
 });
 
 // get page by id
 app.get('/urls/:id', (req, res) => {
-  if (!req.cookies['user_id']) {
+  if (!req.session.user_id) {
     res.status(401).send('401 Unauthorized Access. Please Log in.');
   }
   const id = req.params.id;
   let user = id
-  let username = req.cookies['user_id'].email;
+  let username = req.session.user_id.email;
   const templateVars = {
     username: username,
     id: id,
@@ -134,7 +123,7 @@ app.post('/login', (req, res) => {
     return res.status(403).send('403 Invalid user or password');
   }
 
-  res.cookie('user_id', users[id]);
+  req.session.user_id = users[id];
   res.redirect('/urls');
 });
 
@@ -154,7 +143,9 @@ app.post('/register', (req, res) => {
     password: hashedPassword
   };
 
-  res.cookie('user_id', users[randomId]);
+  // res.cookie('user_id', users[randomId]);
+  req.session.user_id = users[randomId];
+  console.log(users);
   res.redirect('/urls');
 });
 
@@ -162,7 +153,7 @@ app.post('/register', (req, res) => {
 app.post("/urls/:id/", (req, res) => {
   const id = req.params.id;
   const url = urlDatabase[id];
-  let user = req.cookies['user_id'].id;
+  let user = req.session.user_id.id;
   if (!url || url.userID !== user) {
     return res.status(404).send('404 ID not found.');
   }
@@ -174,7 +165,7 @@ app.post("/urls/:id/", (req, res) => {
 
 // logout button
 app.post("/logout", (req, res) => {
-  res.clearCookie('user_id');
+  req.session = null;
   res.redirect('/login');
 });
 
@@ -183,7 +174,7 @@ app.post("/logout", (req, res) => {
 app.post("/urls/:id/delete", (req, res) => {
   const id = req.params.id;
   const url = urlDatabase[id];
-  let user = req.cookies['user_id'].id;
+  let user = req.session.user_id.id;
   if (!url || url.userID !== user) {
     res.status(404).send('404 ID not found.');
   }
@@ -207,12 +198,12 @@ app.get("/u/:id", (req, res) => {
 // shows all urls
 app.get('/urls', (req, res) => {
   let username = null;
-  if (!req.cookies['user_id']) {
+  if (!req.session.user_id) {
     return res.status(401).send('401 Unauthorized Access. Please Login.');
   }
 
-  username = req.cookies['user_id'].email;
-  let userId = req.cookies['user_id'].id;
+  username = req.session.user_id.email;
+  let userId = req.session.user_id.id;
   let personalUrls = urlsForUser(userId);
   let templateVars = {
     username: username,
