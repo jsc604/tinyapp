@@ -3,7 +3,7 @@ const app = express();
 const PORT = 8089; // default port 8080
 const cookieSession = require('cookie-session');
 const bcrypt = require('bcryptjs');
-const getUserByEmail = require('./helpers');
+const { getUserByEmail } = require('./helpers');
 
 const urlDatabase = {};
 
@@ -124,8 +124,10 @@ app.post('/register', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
   const hashedPassword = bcrypt.hashSync(password, 10);
-  if (getUserByEmail(users, email) || !password || !email) {
-    return res.status(400).send('400 Bad Request');
+  const user = getUserByEmail(email, users);
+  const userEmail = user.email;
+  if (userEmail === email || !password || !email) {
+    return res.status(400).send('Invalid inputs or user already exists');
   }
 
   let randomId = generateRandomString();
@@ -135,7 +137,6 @@ app.post('/register', (req, res) => {
     password: hashedPassword
   };
 
-  // res.cookie('user_id', users[randomId]);
   req.session.user_id = users[randomId];
   console.log(users);
   res.redirect('/urls');
