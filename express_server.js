@@ -72,14 +72,17 @@ app.get('/urls', (req, res) => {
 // -----  /urls/:id -----
 //  GET
 app.get('/urls/:id', (req, res) => {
+  if (!req.session.user_id)  {
+    return res.status(401).send('401 Unauthorized Access. Please Log in.');
+  }
+  
   const id = req.params.id;
+  const url = urlDatabase[id];
   const urlData = urlDatabase[id];
   let username = req.session.user_id.email;
-  let user = req.session.user_id.id;
-  const url = urlDatabase[id];
 
-  if (!req.session.user_id || url.userID !== user)  {
-    return res.status(401).send('401 Unauthorized Access. Please Log in.');
+  if (!url) {
+    return res.status(401).send('You do not have access to this url.');
   }
 
   const templateVars = {
@@ -150,11 +153,14 @@ app.post('/login', (req, res) => {
   const password = req.body.password;
   const id = returnId(users, email);
   const user = users[id];
-
-  if (!user || !bcrypt.compareSync(password, user.password)) {
-    return res.status(403).send('403 Invalid user or password');
+  
+  if (!user) {
+    return res.status(403).send('Invalid username');
   }
-
+  if (!bcrypt.compareSync(password, user.password)) {
+    return res.status(403).send('Invalid password');
+  }
+  
   req.session.user_id = users[id];
   res.redirect('/urls');
 });
